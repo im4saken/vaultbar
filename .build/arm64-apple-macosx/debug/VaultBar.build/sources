@@ -1,0 +1,15 @@
+/Users/andy/projects/VaultBar/Sources/VaultBar/App/AppDelegate.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/App/AppNotifications.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/App/KeyRepository.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/App/VaultBarApp.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Models/KeyMetadata.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Search/FuzzySearch.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Security/KeychainHelper.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Storage/MetadataStore.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/UI/AddKeyView.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/UI/CapsuleSearchView.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/UI/FocusedSearchField.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/UI/SettingsView.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/UI/VisualEffectView.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Window/CapsulePanel.swift
+/Users/andy/projects/VaultBar/Sources/VaultBar/Window/SettingsPanel.swift

@@ -1,0 +1,97 @@
+{
+  "": {
+    "dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBar.d",
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBar.o",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/primary.swiftdeps"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/App/AppDelegate.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppDelegate.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppDelegate.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppDelegate.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/App/AppNotifications.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppNotifications.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppNotifications~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppNotifications.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AppNotifications.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/App/KeyRepository.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyRepository.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyRepository~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyRepository.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyRepository.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/App/VaultBarApp.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBarApp.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBarApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBarApp.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VaultBarApp.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Models/KeyMetadata.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyMetadata.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyMetadata~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyMetadata.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeyMetadata.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Search/FuzzySearch.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FuzzySearch.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FuzzySearch~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FuzzySearch.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FuzzySearch.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Security/KeychainHelper.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeychainHelper.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeychainHelper~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeychainHelper.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/KeychainHelper.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Storage/MetadataStore.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/MetadataStore.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/MetadataStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/MetadataStore.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/MetadataStore.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/UI/AddKeyView.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AddKeyView.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AddKeyView~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AddKeyView.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/AddKeyView.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/UI/CapsuleSearchView.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsuleSearchView.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsuleSearchView~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsuleSearchView.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsuleSearchView.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/UI/FocusedSearchField.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FocusedSearchField.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FocusedSearchField~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FocusedSearchField.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/FocusedSearchField.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/UI/SettingsView.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsView.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/UI/VisualEffectView.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VisualEffectView.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VisualEffectView~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VisualEffectView.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/VisualEffectView.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Window/CapsulePanel.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsulePanel.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsulePanel~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsulePanel.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/CapsulePanel.dia"
+  },
+  "/Users/andy/projects/VaultBar/Sources/VaultBar/Window/SettingsPanel.swift": {
+    "object": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsPanel.swift.o",
+    "swiftmodule": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsPanel~partial.swiftmodule",
+    "swift-dependencies": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsPanel.swiftdeps",
+    "diagnostics": "/Users/andy/projects/VaultBar/.build/arm64-apple-macosx/release/VaultBar.build/SettingsPanel.dia"
+  }
+}
