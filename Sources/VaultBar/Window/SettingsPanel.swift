@@ -11,9 +11,10 @@ final class SettingsPanel: NSPanel {
 
         isFloatingPanel = true
         level = .floating
-        isOpaque = false
-        backgroundColor = .clear
+        isOpaque = true
+        backgroundColor = .windowBackgroundColor
         hasShadow = true
+        hidesOnDeactivate = false
         isMovableByWindowBackground = true
         title = "Settings"
         titleVisibility = .visible

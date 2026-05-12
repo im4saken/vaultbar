@@ -1,54 +1,102 @@
 # VaultBar
 
-Minimalist macOS menu bar app for storing, searching, and copying API keys.
+VaultBar 是一个 macOS 菜单栏 API Key 管理器。它支持搜索、复制、编辑和导入 API Key，数据保存在系统 Keychain 和加密元数据中。
 
-## Build
+## 功能
+
+- 菜单栏一键打开搜索栏，快速查找 API Key
+- 复制到剪贴板后自动清理
+- Settings 中可以编辑、删除、批量导入 Key
+- 支持锁定和解锁已保存的 Key
+
+## 安装与运行
+
+### 方式一：直接运行
+
+构建并生成可执行 app bundle：
 
 ```sh
 ./scripts/build-app.sh
 ```
 
-The app bundle is created at:
+生成结果在：
 
 ```text
-.build/VaultBar.app
+build/VaultBar.app
 ```
 
-## Architecture
+然后双击打开，或者用命令启动：
 
-- API key values are stored in the system Keychain as `kSecClassGenericPassword`.
-- Search metadata is stored as encrypted JSON in Application Support:
-  `~/Library/Application Support/VaultBar/metadata.json.enc`
-- The metadata encryption key is generated with `SecRandomCopyBytes` and stored separately in Keychain.
-- Decrypted API keys are read only at copy time and are not cached globally.
-- Clipboard contents are cleared after the configured timeout if the user has not changed the clipboard.
-- The app is configured as an accessory app with `LSUIElement = true`.
-- Sandbox entitlements disable client and server network access.
-
-## UI
-
-- The floating search capsule opens directly below the macOS menu bar.
-- The capsule includes add, search, copy, and settings controls.
-- **Focus-aware search bar** — the capsule and its results disappear immediately when you click away to another app, then reappear on the next ⌘N.
-- Settings provides API key edit/delete and clipboard clear timeout options.
-
-## Importing Keys
-
-### Batch import from file
-
-Open Settings, tap the **download** icon to open a file picker. Import plain text files (`.csv` or `.md`) with one key per line in the format:
-
+```sh
+open .build/VaultBar.app
+open build/VaultBar.app
 ```
+
+### 方式二：本地开发
+
+如果你想用 Swift Package 方式编译：
+
+```sh
+swift build
+```
+
+## 使用教学
+
+### 1. 打开搜索栏
+
+点击菜单栏里的 VaultBar 图标，会弹出搜索栏。
+
+![启动后解锁](assets/launch_unlock.png)
+
+### 2. 搜索和复制
+
+在搜索框里输入 Key 名称，回车会复制当前选中的 Key。也可以点击结果列表里的条目进行选择。
+
+![搜索](assets/search.png)
+
+### 3. 添加 Key
+
+在搜索栏里点击 `+`，会打开新增窗口。填入名称和 API Key 后保存。
+
+![添加](assets/add.png)
+
+### 4. 管理 Key
+
+打开 Settings 可以编辑或删除已有 Key，也可以调整剪贴板自动清理时间。
+
+### 5. 锁定和解锁
+
+在 Settings 左上角点击锁头图标，可以解锁查看或编辑 Key。再次点击会重新锁定并清空当前解锁状态。
+
+![解锁](assets/unlock.png)
+
+### 6. 批量导入
+
+在 Settings 中使用批量导入，选择 `.txt`、`.csv` 或 `.md` 文件。每一行格式如下：
+
+```text
 label,api_key
 ```
 
-Lines starting with `#` or `//` are treated as comments and skipped. The file picker accepts `.txt`, `.csv`, and `.md` files, shows a preview before import, and reports the number of successfully imported keys along with any errors.
+支持跳过以 `#` 或 `//` 开头的注释行。
 
-## Main Files
+## 为什么启动时会要求输入密码
 
-- `Sources/VaultBar/Security/KeychainHelper.swift`: Keychain CRUD and metadata encryption key management.
-- `Sources/VaultBar/Storage/MetadataStore.swift`: encrypted metadata persistence.
-- `Sources/VaultBar/App/KeyRepository.swift`: add/search/copy orchestration, batch import.
-- `Sources/VaultBar/Window/CapsulePanel.swift`: borderless floating Spotlight-style panel.
-- `Sources/VaultBar/UI/CapsuleSearchView.swift`: capsule UI, search field, add and copy controls.
-- `Sources/VaultBar/UI/SettingsView.swift`: edit/delete, clipboard timeout settings, and file-based batch import.
+VaultBar 把 API Key 存在系统 Keychain 里。启动时需要访问这些 Keychain 条目来读取元数据、恢复已保存的 Key，或者准备 Settings 里的编辑视图。macOS 会在某些情况下要求你输入登录密码或通过系统验证，这是系统在确认“当前应用可以读取这些受保护的数据”，不是 VaultBar 自己保存了额外密码。
+
+如果你刚重启过电脑、刚登录账户，或者 Keychain 还没有解锁，第一次访问时出现密码提示是正常的。
+
+## 说明
+
+- API Key 保存在系统 Keychain。
+- 搜索元数据使用加密 JSON 存在 Application Support。
+- 本项目是 macOS 菜单栏应用，`LSUIElement = true`。
+
+## 项目文件
+
+- `Sources/VaultBar/Security/KeychainHelper.swift`: Keychain 读写
+- `Sources/VaultBar/Storage/MetadataStore.swift`: 加密元数据存储
+- `Sources/VaultBar/App/KeyRepository.swift`: 搜索、复制、导入逻辑
+- `Sources/VaultBar/Window/CapsulePanel.swift`: 菜单栏搜索浮窗
+- `Sources/VaultBar/UI/CapsuleSearchView.swift`: 搜索栏界面
+- `Sources/VaultBar/UI/SettingsView.swift`: Settings 管理界面

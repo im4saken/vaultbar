@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="$ROOT_DIR/.build/VaultBar.app"
+OUTPUT_DIR="$ROOT_DIR/build"
+APP_OUTPUT_DIR="$OUTPUT_DIR/VaultBar.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
@@ -25,4 +27,7 @@ cp "$ROOT_DIR/Resources/AppIconMenu.png" "$RESOURCES_DIR/AppIconMenu.png"
 
 xattr -cr "$APP_DIR"
 codesign --force --sign - --entitlements "$ROOT_DIR/VaultBar.entitlements" "$APP_DIR" >/dev/null
-echo "$APP_DIR"
+rm -rf "$APP_OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+cp -R "$APP_DIR" "$APP_OUTPUT_DIR"
+echo "$APP_OUTPUT_DIR"

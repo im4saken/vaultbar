@@ -3,6 +3,7 @@ import SwiftUI
 struct AddKeyView: View {
     @ObservedObject var repository: KeyRepository
     @Environment(\.dismiss) private var dismiss
+    var onClose: (() -> Void)? = nil
     @State private var draft = NewAPIKey(label: "", secret: "")
     @FocusState private var focusedField: Field?
 
@@ -12,33 +13,38 @@ struct AddKeyView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("Add API Key")
-                .font(.title3.weight(.semibold))
+        ZStack {
+            Color(nsColor: .windowBackgroundColor)
 
-            VStack(alignment: .leading, spacing: 10) {
-                TextField("Label", text: $draft.label)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .label)
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Add API Key")
+                    .font(.title3.weight(.semibold))
 
-                SecureField("Key", text: $draft.secret)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .secret)
-            }
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField("Label", text: $draft.label)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .label)
 
-            HStack {
-                Spacer()
-                Button("Cancel") {
-                    dismiss()
+                    SecureField("Key", text: $draft.secret)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focusedField, equals: .secret)
                 }
-                Button("Save") {
-                    save()
+
+                HStack {
+                    Spacer()
+                    Button("Cancel") {
+                        close()
+                    }
+                    Button("Save") {
+                        save()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!draft.isValid)
                 }
-                .keyboardShortcut(.defaultAction)
-                .disabled(!draft.isValid)
             }
+            .padding(24)
         }
-        .padding(24)
+        .frame(width: 420, height: 320, alignment: .topLeading)
         .onAppear {
             focusedField = .label
         }
@@ -47,8 +53,16 @@ struct AddKeyView: View {
     private func save() {
         Task {
             if await repository.add(draft) {
-                dismiss()
+                close()
             }
+        }
+    }
+
+    private func close() {
+        if let onClose {
+            onClose()
+        } else {
+            dismiss()
         }
     }
 }

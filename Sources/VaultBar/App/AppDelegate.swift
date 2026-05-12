@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let repository = KeyRepository()
     private var statusItem: NSStatusItem?
     private var capsuleWindow: CapsulePanel?
+    private var addKeyWindow: NSPanel?
     private var settingsWindow: SettingsPanel?
     private lazy var statusMenu: NSMenu = makeStatusMenu()
 
@@ -14,7 +15,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         repository.load()
         configureStatusItem()
         configureCapsuleWindow()
+        configureAddKeyWindow()
         configureSettingsWindow()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive),
+            name: NSApplication.didResignActiveNotification,
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(openSettingsRequested),
@@ -37,8 +45,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func showAddKey() {
-        showCapsule()
-        capsuleWindow?.openAddKey()
+        guard let addKeyWindow else { return }
+        addKeyWindow.center()
+        capsuleWindow?.orderOut(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        addKeyWindow.orderFrontRegardless()
+        addKeyWindow.makeKeyAndOrderFront(nil)
     }
 
     private func configureStatusItem() {
@@ -52,12 +64,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureCapsuleWindow() {
         let panel = CapsulePanel(contentRect: NSRect(x: 0, y: 0, width: 454, height: 232))
-        let view = CapsuleSearchView(
-            repository: repository,
-            onWindowResign: { [weak panel] in
-                panel?.orderOut(nil)
-            }
-        )
+        let view = CapsuleSearchView(repository: repository, onAddKey: { [weak self] in
+            self?.showAddKey()
+        })
         let hostingController = NSHostingController(rootView: view)
         panel.contentViewController = hostingController
         panel.onCommandN = { [weak self] in self?.showAddKey() }
@@ -137,6 +146,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = panel
     }
 
+    private func configureAddKeyWindow() {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            styleMask: [.titled, .closable, .utilityWindow],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isFloatingPanel = true
+        panel.level = .floating
+        panel.isOpaque = true
+        panel.backgroundColor = .windowBackgroundColor
+        panel.hasShadow = true
+        panel.isMovableByWindowBackground = true
+        panel.title = "Add API Key"
+        panel.titleVisibility = .visible
+        panel.titlebarAppearsTransparent = false
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.animationBehavior = .utilityWindow
+        panel.isReleasedWhenClosed = false
+
+        let view = AddKeyView(repository: repository) { [weak panel] in
+            panel?.orderOut(nil)
+        }
+        panel.contentViewController = NSHostingController(rootView: view)
+        panel.setContentSize(NSSize(width: 420, height: 320))
+        addKeyWindow = panel
+    }
+
     private func showSettings() {
         guard let settingsWindow else { return }
         if !settingsWindow.isVisible {
@@ -148,5 +186,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openSettingsRequested() {
         showSettings()
+    }
+
+    @objc private func applicationDidResignActive() {
+        capsuleWindow?.orderOut(nil)
+        repository.searchText = ""
     }
 }

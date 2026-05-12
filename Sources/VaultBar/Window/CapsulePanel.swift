@@ -21,7 +21,7 @@ final class CapsulePanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
-        hidesOnDeactivate = false
+        hidesOnDeactivate = true
         isMovableByWindowBackground = true
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         animationBehavior = .utilityWindow
@@ -90,7 +90,6 @@ final class CapsulePanel: NSPanel {
 
     override func resignKey() {
         onResignKey?()
-        orderOut(nil)
         super.resignKey()
     }
 }

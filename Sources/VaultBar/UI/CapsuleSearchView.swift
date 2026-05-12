@@ -2,16 +2,15 @@ import SwiftUI
 
 struct CapsuleSearchView: View {
     @ObservedObject var repository: KeyRepository
-    @State private var isAddingKey = false
+    let onAddKey: () -> Void
     @FocusState private var searchFieldFocused: Bool
     @State private var showCopiedToast = false
-    let onWindowResign: () -> Void
 
     var body: some View {
         VStack(spacing: 6) {
             HStack(spacing: 8) {
                 Button {
-                    isAddingKey = true
+                    onAddKey()
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 15, weight: .semibold))
@@ -83,13 +82,6 @@ struct CapsuleSearchView: View {
         .frame(width: 454, alignment: .top)
         .onAppear {
             searchFieldFocused = true
-        }
-        .sheet(isPresented: $isAddingKey) {
-            AddKeyView(repository: repository)
-                .frame(width: 420)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .vaultBarOpenAddKey)) { _ in
-            isAddingKey = true
         }
         .alert("VaultBar", isPresented: errorBinding) {
             Button("OK", role: .cancel) {

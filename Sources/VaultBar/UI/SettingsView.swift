@@ -70,9 +70,7 @@ struct SettingsView: View {
                 .padding(16)
         }
         .frame(width: 520, height: 420)
-        .background(
-            VisualEffectView(material: .hudWindow)
-        )
+        .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             selectInitialKey()
         }
@@ -280,7 +278,7 @@ struct SettingsView: View {
 
     private var unlockButton: some View {
         Button {
-            unlockAllSecrets()
+            toggleLockState()
         } label: {
             Image(systemName: isUnlocked ? "lock.open.fill" : "lock.fill")
                 .font(.system(size: 15, weight: .semibold))
@@ -289,7 +287,7 @@ struct SettingsView: View {
                 .clipShape(Circle())
         }
         .buttonStyle(.plain)
-        .help(isUnlocked ? "Unlocked" : "Unlock all keys")
+        .help(isUnlocked ? "Lock all keys" : "Unlock all keys")
     }
 
     private var clipboardSettings: some View {
@@ -349,6 +347,24 @@ struct SettingsView: View {
                 unlockedSecrets[selectedID] = nil
                 self.selectedID = repository.items.sorted { $0.updatedAt > $1.updatedAt }.first?.id
             }
+        }
+    }
+
+    private func toggleLockState() {
+        if isUnlocked {
+            lockAllSecrets()
+        } else {
+            unlockAllSecrets()
+        }
+    }
+
+    private func lockAllSecrets() {
+        unlockedSecrets = [:]
+        if let selectedMetadata {
+            loadDraft(from: selectedMetadata)
+        } else {
+            draftSecret = ""
+            isShowingSecret = false
         }
     }
 

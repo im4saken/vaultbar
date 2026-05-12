@@ -14,6 +14,11 @@ let package = Package(
         .executableTarget(
             name: "VaultBar",
             path: "Sources/VaultBar"
+        ),
+        .testTarget(
+            name: "VaultBarTests",
+            dependencies: ["VaultBar"],
+            path: "Tests/VaultBarTests"
         )
     ]
 )
