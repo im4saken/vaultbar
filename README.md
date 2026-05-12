@@ -1,5 +1,7 @@
 # VaultBar
 
+![banner](assets/banner.png)
+
 VaultBar 是一个 macOS 菜单栏 API Key 管理器。它支持搜索、复制、编辑和导入 API Key，数据保存在系统 Keychain 和加密元数据中。
 
 ## 功能
@@ -28,7 +30,6 @@ build/VaultBar.app
 然后双击打开，或者用命令启动：
 
 ```sh
-open .build/VaultBar.app
 open build/VaultBar.app
 ```
 
@@ -44,7 +45,7 @@ swift build
 
 ### 1. 打开搜索栏
 
-点击菜单栏里的 VaultBar 图标，会弹出搜索栏。
+点击菜单栏里的 VaultBar 图标，会弹出搜索栏。第一次启动时，macOS 可能会要求授权。
 
 ![启动后解锁](assets/launch_unlock.png)
 
