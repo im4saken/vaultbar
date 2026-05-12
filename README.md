@@ -4,6 +4,12 @@
 
 VaultBar 是一个 macOS 菜单栏 API Key 管理器。它支持搜索、复制、编辑和导入 API Key，数据保存在系统 Keychain 和加密元数据中。
 
+## 下载
+
+如果你只想直接使用，不需要自己编译，可以到 GitHub Releases 下载预编译版本：
+
+[VaultBar v1.0.0](https://github.com/im4saken/vaultbar/releases/tag/v1.0.0)
+
 ## 功能
 
 - 菜单栏一键打开搜索栏，快速查找 API Key
