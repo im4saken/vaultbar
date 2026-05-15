@@ -114,7 +114,9 @@ VaultBar 把 API Key 存在系统 Keychain 里。启动时需要访问这些 Key
 - API Key 保存在系统 Keychain。
 - 搜索元数据使用加密 JSON 存在 Application Support。
 - 本项目是 macOS 菜单栏应用，`LSUIElement = true`。
-- 本应用**未启用 App Sandbox**：通过 GitHub Releases 直接下载分发（非 Mac App Store），不沙盒化是为了让标准文件操作可用。密钥仍由系统 Keychain 加密保护，与是否沙盒无关。
+- 本应用**启用 App Sandbox**，并**禁用网络访问**（`network.client`/`network.server` 均为 false）。即使应用被攻破，sandbox + 无网络也能限制密钥被外传。
+- 导出需要写入「下载」文件夹，因此声明了 `com.apple.security.files.downloads.read-write`；导入是粘贴文本，不需要文件访问权限。
+- API Key 由系统 Keychain 加密保护，这与是否沙盒无关。
 
 ## 项目文件
 
