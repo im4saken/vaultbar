@@ -83,39 +83,68 @@ final class KeyRepository: ObservableObject {
 
 
     func batchImport(textContent: String) async -> (successCount: Int, errorMessages: [String]) {
-        let lines = textContent.split(separator: "\n", omittingEmptySubsequences: false)
+        let rows = CSVCodec.parse(textContent)
         var successCount = 0
         var errorMessages: [String] = []
 
-        for (index, line) in lines.enumerated() {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { continue }
+        for (index, row) in rows.enumerated() {
+            let lineNumber = index + 1
 
-            // Skip comment lines (for .md files)
-            if trimmed.hasPrefix("#") || trimmed.hasPrefix("//") { continue }
+            // Skip blank rows
+            if row.allSatisfy({ $0.trimmingCharacters(in: .whitespaces).isEmpty }) { continue }
 
-            // Parse "label,api_key" format - split on first comma only
-            guard let firstComma = trimmed.firstIndex(of: ",") else {
-                errorMessages.append("Line \(index + 1): Invalid format. Expected label,api_key.")
+            // Skip comment rows (where the first field starts with # or //)
+            let firstField = row.first?.trimmingCharacters(in: .whitespaces) ?? ""
+            if firstField.hasPrefix("#") || firstField.hasPrefix("//") { continue }
+
+            // Skip header row
+            if row.count >= 2,
+               row[0].trimmingCharacters(in: .whitespaces).lowercased() == "label",
+               row[1].trimmingCharacters(in: .whitespaces).lowercased() == "api_key" {
                 continue
             }
 
-            let label = String(trimmed[..<firstComma]).trimmingCharacters(in: .whitespacesAndNewlines)
-            let secret = String(trimmed[firstComma...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            let label: String
+            let secret: String
+            let website: String
+            let notes: String
+
+            switch row.count {
+            case 2:
+                label = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                secret = row[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                website = ""
+                notes = ""
+            case 4:
+                label = row[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                secret = row[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                website = row[2].trimmingCharacters(in: .whitespacesAndNewlines)
+                notes = row[3].trimmingCharacters(in: .whitespacesAndNewlines)
+            default:
+                errorMessages.append("Line \(lineNumber): Expected 2 or 4 columns, got \(row.count).")
+                continue
+            }
 
             guard !label.isEmpty else {
-                errorMessages.append("Line \(index + 1): Label is empty.")
+                errorMessages.append("Line \(lineNumber): Label is empty.")
                 continue
             }
 
             guard !secret.isEmpty else {
-                errorMessages.append("Line \(index + 1): API key is empty.")
+                errorMessages.append("Line \(lineNumber): API key is empty.")
                 continue
             }
 
             do {
                 let now = Date()
-                let metadata = KeyMetadata(id: UUID(), label: label, website: "", notes: "", createdAt: now, updatedAt: now)
+                let metadata = KeyMetadata(
+                    id: UUID(),
+                    label: label,
+                    website: website,
+                    notes: notes,
+                    createdAt: now,
+                    updatedAt: now
+                )
                 try upsertVaultSecret(secret, id: metadata.id)
                 var updatedItems = items
                 updatedItems.append(metadata)
@@ -123,11 +152,24 @@ final class KeyRepository: ObservableObject {
                 items = updatedItems
                 successCount += 1
             } catch {
-                errorMessages.append("Line \(index + 1): \(error.localizedDescription)")
+                errorMessages.append("Line \(lineNumber): \(error.localizedDescription)")
             }
         }
 
         return (successCount, errorMessages)
+    }
+
+    func exportAllAsCSV(secrets: [UUID: String]) -> String {
+        Self.buildExportCSV(items: items, secrets: secrets)
+    }
+
+    nonisolated static func buildExportCSV(items: [KeyMetadata], secrets: [UUID: String]) -> String {
+        var rows: [[String]] = [["label", "api_key", "website", "notes"]]
+        for item in items {
+            let secret = secrets[item.id] ?? ""
+            rows.append([item.label, secret, item.website, item.notes])
+        }
+        return CSVCodec.serialize(rows) + "\n"
     }
 
 

@@ -9,8 +9,8 @@ final class SettingsPanel: NSPanel {
             defer: false
         )
 
-        isFloatingPanel = true
-        level = .floating
+        isFloatingPanel = false
+        level = .normal
         isOpaque = true
         backgroundColor = .windowBackgroundColor
         hasShadow = true

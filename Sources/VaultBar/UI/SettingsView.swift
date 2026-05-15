@@ -13,11 +13,7 @@ struct SettingsView: View {
     @State private var draftNotes = ""
     @State private var showingDeleteConfirmation = false
     @State private var unlockedSecrets: [UUID: String] = [:]
-    @State private var showingBatchImport = false
-    @State private var selectedFileURL: URL?
-    @State private var importPreview = ""
-    @State private var showingBatchResult = false
-    @State private var batchResultMessage = ""
+    @State private var statusToast: String?
 
     private let timeoutOptions = [
         TimeoutOption(label: "Never", seconds: 0),
@@ -35,7 +31,7 @@ struct SettingsView: View {
                 Text("设置")
                     .font(.title3.weight(.semibold))
 
-                Button(action: { showingBatchImport = true }) {
+                Button(action: { importTapped() }) {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 15, weight: .semibold))
                         .frame(width: 30, height: 30)
@@ -43,8 +39,18 @@ struct SettingsView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .help("Batch import keys")
-                .hidden()
+                .help("批量导入")
+
+                Button(action: { startExport() }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(width: 30, height: 30)
+                        .background(.white.opacity(0.12))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("导出为 CSV（含明文密钥）")
+                .disabled(repository.items.isEmpty)
 
                 unlockButton
 
@@ -87,6 +93,9 @@ struct SettingsView: View {
         }
         .frame(width: 520, height: 500)
         .background(Color(nsColor: .windowBackgroundColor))
+        .overlay(alignment: .bottom) {
+            statusToastView
+        }
         .onAppear {
             selectInitialKey()
         }
@@ -99,110 +108,160 @@ struct SettingsView: View {
                 loadDraft(from: selectedMetadata)
             }
         }
-        .confirmationDialog("Delete API Key?", isPresented: $showingDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
+        .confirmationDialog("删除这个 API Key？", isPresented: $showingDeleteConfirmation) {
+            Button("删除", role: .destructive) {
                 deleteSelected()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("取消", role: .cancel) {}
         } message: {
-            Text("This removes the Keychain item and encrypted metadata.")
-        }
-        .sheet(isPresented: $showingBatchImport) {
-            batchImportSheet
-        }
-        .alert("Batch Import Result", isPresented: $showingBatchResult) {
-            Button("OK") { }
-        } message: {
-            Text(batchResultMessage)
+            Text("将同时移除 Keychain 条目和加密元数据。")
         }
     }
 
-    private var batchImportSheet: some View {
-        VStack(spacing: 16) {
-            Text("Batch Import")
-                .font(.title3.weight(.semibold))
-
-            Text("Import a plain text file (.csv or .md) with one key per line in the format: label,api_key")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            Button("Choose File…") {
-                selectFile()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-
-            if let selectedFileURL {
-                Text(selectedFileURL.lastPathComponent)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            if !importPreview.isEmpty {
-                ScrollView {
-                    Text(importPreview)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxHeight: 120)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
-            }
-
-            HStack {
-                Spacer()
-                Button("Cancel") {
-                    selectedFileURL = nil
-                    importPreview = ""
-                    dismiss()
-                }
-                Button("Import") {
-                    Task { await importFile() }
-                }
-                .keyboardShortcut(.defaultAction)
-                .disabled(selectedFileURL == nil || importPreview.isEmpty)
+    private var statusToastView: some View {
+        Group {
+            if let statusToast {
+                Text(statusToast)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(Color.accentColor.opacity(0.9))
+                    )
+                    .padding(.bottom, 70)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .padding(24)
+        .animation(.easeInOut(duration: 0.2), value: statusToast)
     }
 
-    private func selectFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.plainText]
-        panel.begin { result in
-            if result == .OK, let url = panel.url {
-                selectedFileURL = url
-                Task { await loadPreview(from: url) }
+    private func showToast(_ message: String) {
+        statusToast = message
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            if statusToast == message {
+                statusToast = nil
             }
         }
     }
 
-    private func loadPreview(from url: URL) async {
-        do {
-            let content = try String(contentsOf: url, encoding: .utf8)
-            importPreview = String(content.prefix(500))
-        } catch {
-            importPreview = "Failed to read file: \(error.localizedDescription)"
-        }
-    }
+    private func importTapped() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "批量导入"
+        alert.informativeText = """
+        把 CSV 内容粘贴到下方文本框，然后点「导入」。
 
-    private func importFile() async {
-        guard let url = selectedFileURL else { return }
-        do {
-            let content = try String(contentsOf: url, encoding: .utf8)
-            let result = await repository.batchImport(textContent: content)
-            batchResultMessage = "成功导入 \(result.successCount) 个密钥"
+        支持格式：
+        • 4 列 label,api_key,website,notes（推荐，导出也用此格式）
+        • 2 列 label,api_key（兼容旧版）
+        • # 或 // 开头的行视为注释；表头行会被跳过
+        • 同名条目作为新条目添加，不会去重
+
+        内容含明文 API Key，导入后请妥善清理来源。
+        """
+
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 200))
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: 460, height: 200))
+        textView.isEditable = true
+        textView.isRichText = false
+        textView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.autoresizingMask = [.width]
+        scroll.documentView = textView
+        alert.accessoryView = scroll
+
+        alert.addButton(withTitle: "导入")
+        alert.addButton(withTitle: "取消")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.window.initialFirstResponder = textView
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let text = textView.string
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            showResultAlert(title: "批量导入结果", message: "没有可导入的内容。")
+            return
+        }
+        Task {
+            let result = await repository.batchImport(textContent: text)
+            var message = "成功导入 \(result.successCount) 个密钥"
             if !result.errorMessages.isEmpty {
-                batchResultMessage += "\n\n错误:\n" + result.errorMessages.joined(separator: "\n")
+                message += "\n\n错误:\n" + result.errorMessages.joined(separator: "\n")
             }
-            showingBatchResult = true
+            showResultAlert(title: "批量导入结果", message: message)
+        }
+    }
+
+    private func startExport() {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "导出包含明文密钥"
+        alert.informativeText = """
+        • 导出的 CSV 包含未加密的 API Key，任何能读到这个文件的人都能看到所有密钥
+        • 文件会写入「下载」文件夹（~/Downloads）
+        • 不要放到 iCloud / Dropbox 等会自动同步的位置；不要放进 Git 仓库、聊天工具或公开存储
+        • 使用完毕后请妥善删除该文件
+
+        继续后会通过 Touch ID 确认身份。
+        """
+        alert.addButton(withTitle: "继续导出")
+        alert.addButton(withTitle: "取消")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await performExport() }
+    }
+
+    private func performExport() async {
+        var secrets = unlockedSecrets
+        if secrets.isEmpty {
+            secrets = await repository.unlockSecretsForSettings()
+            guard !secrets.isEmpty else { return }
+            unlockedSecrets = secrets
+        }
+        let csv = repository.exportAllAsCSV(secrets: secrets)
+
+        guard let downloads = FileManager.default.urls(
+            for: .downloadsDirectory, in: .userDomainMask
+        ).first else {
+            showResultAlert(title: "导出失败", message: "找不到「下载」文件夹。")
+            return
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let url = downloads.appendingPathComponent(
+            "vaultbar-export-\(formatter.string(from: Date())).csv"
+        )
+        do {
+            try csv.write(to: url, atomically: true, encoding: .utf8)
+            showExportSuccessAlert(url: url)
         } catch {
-            batchResultMessage = "导入失败: \(error.localizedDescription)"
-            showingBatchResult = true
+            showResultAlert(title: "导出失败", message: error.localizedDescription)
+        }
+    }
+
+    private func showResultAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: "好")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+
+    private func showExportSuccessAlert(url: URL) {
+        let alert = NSAlert()
+        alert.messageText = "导出成功"
+        alert.informativeText = "已保存到：\n\(url.path)\n\n这是明文文件，请妥善保管并在用完后删除。"
+        alert.addButton(withTitle: "在 Finder 中显示")
+        alert.addButton(withTitle: "好")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
         }
     }
 
@@ -295,29 +354,36 @@ struct SettingsView: View {
                                 .scrollContentBackground(.hidden)
                         }
                     }
-                    .padding(16)
+                    .padding(.leading, 20)
+                    .padding(.trailing, 28)
+                    .padding(.vertical, 16)
 
                     Divider()
 
                     HStack {
+                        Spacer()
+
                         Button(role: .destructive) {
                             showingDeleteConfirmation = true
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("删除", systemImage: "trash")
                         }
                         .buttonStyle(.bordered)
 
-                        Spacer()
+                        Spacer().frame(width: 16)
 
                         Button {
                             saveSelected()
                         } label: {
-                            Label("Save", systemImage: "checkmark")
+                            Label("保存", systemImage: "checkmark")
                         }
                         .buttonStyle(.borderedProminent)
                         .keyboardShortcut(.defaultAction)
-                        .disabled(draftLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !isUnlocked)
+                        .disabled(!isDirty || draftLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !isUnlocked)
+
+                        Spacer()
                     }
+                    .padding(.vertical, 14)
                 }
             } else {
                 ContentUnavailableView(
@@ -385,6 +451,14 @@ struct SettingsView: View {
         !unlockedSecrets.isEmpty || repository.items.isEmpty
     }
 
+    private var isDirty: Bool {
+        guard let meta = selectedMetadata else { return false }
+        return draftLabel != meta.label
+            || draftWebsite != meta.website
+            || draftNotes != meta.notes
+            || draftSecret != (unlockedSecrets[meta.id] ?? "")
+    }
+
     private func selectInitialKey() {
         let first = repository.items.sorted { $0.updatedAt > $1.updatedAt }.first
         selectedID = first?.id
@@ -405,6 +479,7 @@ struct SettingsView: View {
         Task {
             if await repository.update(id: selectedID, label: draftLabel, secret: draftSecret, website: draftWebsite, notes: draftNotes) {
                 unlockedSecrets[selectedID] = draftSecret
+                showToast("已保存")
             }
         }
     }
@@ -415,6 +490,7 @@ struct SettingsView: View {
             if await repository.delete(id: selectedID) {
                 unlockedSecrets[selectedID] = nil
                 self.selectedID = repository.items.sorted { $0.updatedAt > $1.updatedAt }.first?.id
+                showToast("已删除")
             }
         }
     }
