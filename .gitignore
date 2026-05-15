@@ -17,3 +17,6 @@ build/
 
 # macOS
 .DS_Store
+
+# Local development notes (not for GitHub)
+DEVELOPMENT.md
