@@ -86,6 +86,7 @@ struct AboutView: View {
             }
         }
         .padding(24)
+        .frame(width: 360)
     }
 
     private func statusBarIcon() -> NSImage {
@@ -104,7 +105,7 @@ struct AboutView: View {
 final class AboutPanel: NSPanel {
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 520),
             styleMask: [.titled, .closable, .utilityWindow],
             backing: .buffered,
             defer: false
@@ -122,7 +123,6 @@ final class AboutPanel: NSPanel {
         titlebarAppearsTransparent = true
         standardWindowButton(.zoomButton)?.isHidden = true
         standardWindowButton(.closeButton)?.isHidden = false
-        setContentSize(NSSize(width: 320, height: 460))
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         animationBehavior = .utilityWindow
         isReleasedWhenClosed = false

@@ -16,7 +16,7 @@ final class SettingsPanel: NSPanel {
         hasShadow = true
         hidesOnDeactivate = false
         isMovableByWindowBackground = true
-        title = "Settings"
+        title = "设置"
         titleVisibility = .visible
         titlebarAppearsTransparent = false
         standardWindowButton(.zoomButton)?.isHidden = true

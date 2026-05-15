@@ -66,7 +66,7 @@ final class KeyRepository: ObservableObject {
 
         do {
             let now = Date()
-            let metadata = KeyMetadata(id: UUID(), label: label, createdAt: now, updatedAt: now)
+            let metadata = KeyMetadata(id: UUID(), label: label, website: newKey.website.trimmingCharacters(in: .whitespacesAndNewlines), notes: newKey.notes.trimmingCharacters(in: .whitespacesAndNewlines), createdAt: now, updatedAt: now)
             try upsertVaultSecret(newKey.secret, id: metadata.id)
             var updatedItems = items
             updatedItems.append(metadata)
@@ -115,7 +115,7 @@ final class KeyRepository: ObservableObject {
 
             do {
                 let now = Date()
-                let metadata = KeyMetadata(id: UUID(), label: label, createdAt: now, updatedAt: now)
+                let metadata = KeyMetadata(id: UUID(), label: label, website: "", notes: "", createdAt: now, updatedAt: now)
                 try upsertVaultSecret(secret, id: metadata.id)
                 var updatedItems = items
                 updatedItems.append(metadata)
@@ -184,7 +184,7 @@ final class KeyRepository: ObservableObject {
         }
     }
 
-    func update(id: UUID, label: String, secret: String) async -> Bool {
+    func update(id: UUID, label: String, secret: String, website: String, notes: String) async -> Bool {
         let label = label.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !label.isEmpty else {
             errorMessage = "Label is required."
@@ -200,6 +200,8 @@ final class KeyRepository: ObservableObject {
             try upsertVaultSecret(secret, id: id)
             var updatedItems = items
             updatedItems[index].label = label
+            updatedItems[index].website = website.trimmingCharacters(in: .whitespacesAndNewlines)
+            updatedItems[index].notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
             updatedItems[index].updatedAt = Date()
             try await metadataStore.save(updatedItems)
             items = updatedItems

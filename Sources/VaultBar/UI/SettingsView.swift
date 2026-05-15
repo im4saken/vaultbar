@@ -32,7 +32,7 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Settings")
+                Text("设置")
                     .font(.title3.weight(.semibold))
 
                 Button(action: { showingBatchImport = true }) {
@@ -212,7 +212,8 @@ struct SettingsView: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
+                .padding(.leading, 24)
+                .padding(.trailing, 16)
                 .padding(.vertical, 12)
 
             Divider()
@@ -252,6 +253,8 @@ struct SettingsView: View {
 
                 Spacer(minLength: 0)
             }
+            .padding(.leading, 24)
+            .padding(.trailing, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
