@@ -148,7 +148,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureAddKeyWindow() {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 420),
             styleMask: [.titled, .closable, .utilityWindow],
             backing: .buffered,
             defer: false
@@ -160,8 +160,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hasShadow = true
         panel.isMovableByWindowBackground = true
         panel.title = "Add API Key"
-        panel.titleVisibility = .visible
-        panel.titlebarAppearsTransparent = false
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.animationBehavior = .utilityWindow
@@ -171,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             panel?.orderOut(nil)
         }
         panel.contentViewController = NSHostingController(rootView: view)
-        panel.setContentSize(NSSize(width: 420, height: 320))
+        panel.setContentSize(NSSize(width: 380, height: 420))
         addKeyWindow = panel
     }
 
