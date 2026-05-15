@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var capsuleWindow: CapsulePanel?
     private var addKeyWindow: NSPanel?
     private var settingsWindow: SettingsPanel?
+    private var aboutPanel: AboutPanel?
     private lazy var statusMenu: NSMenu = makeStatusMenu()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -109,6 +110,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showSettings()
     }
 
+    @objc private func aboutClicked() {
+        showAbout()
+    }
+
     @objc private func quitClicked() {
         NSApp.terminate(nil)
     }
@@ -122,7 +127,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "设置", action: #selector(settingsClicked), keyEquivalent: ","))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "退出 app", action: #selector(quitClicked), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "关于", action: #selector(aboutClicked), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "退出", action: #selector(quitClicked), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         return menu
     }
@@ -140,6 +147,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panel = SettingsPanel(contentRect: NSRect(x: 0, y: 0, width: 520, height: 420))
         let view = SettingsView(repository: repository) { [weak panel] in
             panel?.orderOut(nil)
+        } aboutAction: {
+            self.showAbout()
         }
         panel.contentViewController = NSHostingController(rootView: view)
         panel.setContentSize(NSSize(width: 520, height: 420))
@@ -182,6 +191,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow.makeKeyAndOrderFront(nil)
+    }
+
+    private func showAbout() {
+        if aboutPanel == nil {
+            aboutPanel = AboutPanel()
+        }
+        aboutPanel?.show()
     }
 
     @objc private func openSettingsRequested() {

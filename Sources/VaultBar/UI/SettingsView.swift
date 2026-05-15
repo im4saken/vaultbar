@@ -4,12 +4,14 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var repository: KeyRepository
     var onClose: () -> Void = {}
+    var aboutAction: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var selectedID: UUID?
     @State private var draftLabel = ""
     @State private var draftSecret = ""
+    @State private var draftWebsite = ""
+    @State private var draftNotes = ""
     @State private var showingDeleteConfirmation = false
-    @State private var isShowingSecret = false
     @State private var unlockedSecrets: [UUID: String] = [:]
     @State private var showingBatchImport = false
     @State private var selectedFileURL: URL?
@@ -28,6 +30,7 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header
             HStack {
                 Text("Settings")
                     .font(.title3.weight(.semibold))
@@ -45,15 +48,28 @@ struct SettingsView: View {
 
                 unlockButton
 
+                if let aboutAction {
+                    Button(action: aboutAction) {
+                        Image(systemName: "exclamationmark")
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(width: 30, height: 30)
+                            .background(.white.opacity(0.12))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("About")
+                }
+
                 Spacer()
             }
             .padding(.leading, 76)
             .padding(.trailing, 20)
-            .padding(.top, 20)
-            .padding(.bottom, 14)
+            .padding(.top, 16)
+            .padding(.bottom, 10)
 
             Divider()
 
+            // Key list + Editor
             HStack(spacing: 0) {
                 keyList
                     .frame(width: 190)
@@ -61,15 +77,15 @@ struct SettingsView: View {
                 Divider()
 
                 editor
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             Divider()
 
+            // Clipboard settings footer
             clipboardSettings
-                .padding(16)
+                .padding(14)
         }
-        .frame(width: 520, height: 420)
+        .frame(width: 520, height: 500)
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             selectInitialKey()
@@ -150,120 +166,155 @@ struct SettingsView: View {
             }
         }
         .padding(24)
-        .frame(width: 500)
     }
 
-    @MainActor
     private func selectFile() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.plainText]
         panel.allowsMultipleSelection = false
-        panel.canChooseFiles = true
         panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            selectedFileURL = url
-            Task { await loadPreview() }
+        panel.allowedContentTypes = [.plainText]
+        panel.begin { result in
+            if result == .OK, let url = panel.url {
+                selectedFileURL = url
+                Task { await loadPreview(from: url) }
+            }
         }
     }
 
-    @MainActor
-    private func loadPreview() async {
+    private func loadPreview(from url: URL) async {
         do {
-            let content = try String(contentsOf: selectedFileURL!, encoding: .utf8)
-            importPreview = content.prefix(500).description
+            let content = try String(contentsOf: url, encoding: .utf8)
+            importPreview = String(content.prefix(500))
         } catch {
-            importPreview = "Error reading file: \(error.localizedDescription)"
+            importPreview = "Failed to read file: \(error.localizedDescription)"
         }
     }
 
-    @MainActor
     private func importFile() async {
         guard let url = selectedFileURL else { return }
         do {
             let content = try String(contentsOf: url, encoding: .utf8)
-            let (successCount, errors) = await repository.batchImport(textContent: content)
-
-            var message = ""
-            if successCount > 0 {
-                message += "Imported \(successCount) key\(successCount == 1 ? "" : "s")."
+            let result = await repository.batchImport(textContent: content)
+            batchResultMessage = "成功导入 \(result.successCount) 个密钥"
+            if !result.errorMessages.isEmpty {
+                batchResultMessage += "\n\n错误:\n" + result.errorMessages.joined(separator: "\n")
             }
-            if !errors.isEmpty {
-                message += "\n\n\(errors.count) error(s):\n" + errors.joined(separator: "\n")
-            }
-
-            batchResultMessage = message
             showingBatchResult = true
-            selectedFileURL = nil
-            importPreview = ""
         } catch {
-            batchResultMessage = "Error: \(error.localizedDescription)"
+            batchResultMessage = "导入失败: \(error.localizedDescription)"
             showingBatchResult = true
         }
     }
 
     private var keyList: some View {
-        List(repository.items, id: \.id) { item in
-            Button {
-                selectedID = item.id
-                loadDraft(from: item)
-            } label: {
-                Text(item.label)
-                    .lineLimit(1)
-                    .foregroundStyle(selectedID == item.id ? .primary : .secondary)
+        VStack(spacing: 0) {
+            Text("API Keys")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(repository.items.sorted { $0.updatedAt > $1.updatedAt }) { item in
+                        keyRow(item)
+                    }
+
+                    if repository.items.isEmpty {
+                        ContentUnavailableView(
+                            "No Keys",
+                            systemImage: "key",
+                            description: Text("Add a key from the search bar.")
+                        )
+                        .frame(maxWidth: .infinity)
+                    }
+                }
             }
-            .buttonStyle(.plain)
         }
     }
 
+    private func keyRow(_ item: KeyMetadata) -> some View {
+        Button {
+            selectedID = item.id
+            loadDraft(from: item)
+        } label: {
+            HStack(spacing: 0) {
+                Image(systemName: "key")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, alignment: .leading)
+
+                Text(item.label)
+                    .lineLimit(1)
+                    .foregroundStyle(.primary.opacity(selectedID == item.id ? 1.0 : 0.7))
+
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 32)
+        .background(selectedID == item.id ? Color.accentColor.opacity(0.12) : .clear)
+    }
+
     private var editor: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if selectedMetadata != nil {
-                Text("Edit Key")
-                    .font(.headline)
+        Group {
+            if selectedID != nil && repository.items.contains(where: { $0.id == selectedID }) {
+                VStack(spacing: 0) {
+                    VStack(spacing: 12) {
+                        formRow(title: "标题") {
+                            TextField("标题", text: $draftLabel)
+                                .textFieldStyle(.plain)
+                        }
 
-                TextField("Label", text: $draftLabel)
-                    .textFieldStyle(.roundedBorder)
+                        Divider().opacity(0.5)
 
-                if isShowingSecret {
-                    TextField("Key", text: $draftSecret)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-                        .disabled(!isUnlocked)
-                } else {
-                    SecureField(isUnlocked ? "Key" : "Locked", text: $draftSecret)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-                        .disabled(!isUnlocked)
-                }
+                        formRow(title: "API/Token") {
+                            SecureField("API/Token", text: $draftSecret)
+                                .textFieldStyle(.plain)
+                        }
 
-                HStack {
-                    Button(role: .destructive) {
-                        showingDeleteConfirmation = true
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                        Divider().opacity(0.5)
+
+                        formRow(title: "网站") {
+                            TextField("example.com", text: $draftWebsite)
+                                .textFieldStyle(.plain)
+                        }
+
+                        Divider().opacity(0.5)
+
+                        formRow(title: "备注") {
+                            TextEditor(text: $draftNotes)
+                                .font(.system(size: 15))
+                                .scrollContentBackground(.hidden)
+                        }
                     }
-                    .frame(width: 90)
+                    .padding(16)
 
-                    Spacer()
+                    Divider()
 
-                    Button {
-                        isShowingSecret.toggle()
-                    } label: {
-                        Label(isShowingSecret ? "Hide" : "Show", systemImage: isShowingSecret ? "eye.slash" : "eye")
+                    HStack {
+                        Button(role: .destructive) {
+                            showingDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+
+                        Button {
+                            saveSelected()
+                        } label: {
+                            Label("Save", systemImage: "checkmark")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(draftLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !isUnlocked)
                     }
-                    .frame(width: 82)
-                    .disabled(!isUnlocked)
-
-                    Button {
-                        saveSelected()
-                    } label: {
-                        Label("Save", systemImage: "checkmark")
-                    }
-                    .frame(width: 82)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(draftLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !isUnlocked)
                 }
             } else {
                 ContentUnavailableView(
@@ -273,7 +324,21 @@ struct SettingsView: View {
                 )
             }
         }
-        .padding(20)
+    }
+
+    private func formRow<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary.opacity(0.82))
+                .frame(width: 84, alignment: .leading)
+
+            content()
+                .font(.system(size: 16))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundStyle(.primary)
+        }
+        .padding(.vertical, 12)
     }
 
     private var unlockButton: some View {
@@ -328,13 +393,14 @@ struct SettingsView: View {
     private func loadDraft(from metadata: KeyMetadata) {
         draftLabel = metadata.label
         draftSecret = unlockedSecrets[metadata.id] ?? ""
-        isShowingSecret = false
+        draftWebsite = metadata.website
+        draftNotes = metadata.notes
     }
 
     private func saveSelected() {
         guard let selectedID else { return }
         Task {
-            if await repository.update(id: selectedID, label: draftLabel, secret: draftSecret) {
+            if await repository.update(id: selectedID, label: draftLabel, secret: draftSecret, website: draftWebsite, notes: draftNotes) {
                 unlockedSecrets[selectedID] = draftSecret
             }
         }
@@ -363,8 +429,10 @@ struct SettingsView: View {
         if let selectedMetadata {
             loadDraft(from: selectedMetadata)
         } else {
+            draftLabel = ""
             draftSecret = ""
-            isShowingSecret = false
+            draftWebsite = ""
+            draftNotes = ""
         }
     }
 
