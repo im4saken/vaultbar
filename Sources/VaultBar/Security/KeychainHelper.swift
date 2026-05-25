@@ -72,9 +72,14 @@ final class KeychainHelper: @unchecked Sendable {
         try delete(service: apiKeyService, account: id.uuidString)
     }
 
-    func metadataEncryptionKey() throws -> Data {
-        if let existing = try? read(service: metadataService, account: metadataKeyAccount) {
+    func metadataEncryptionKey(createIfMissing: Bool = true) throws -> Data {
+        do {
+            let existing = try read(service: metadataService, account: metadataKeyAccount)
             return existing
+        } catch KeychainError.itemNotFound {
+            guard createIfMissing else {
+                throw KeychainError.itemNotFound
+            }
         }
 
         var key = Data(count: 32)

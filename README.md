@@ -79,6 +79,8 @@ swift build
 
 ![解锁](assets/unlock.png)
 
+> 截图说明：`assets/unlock.png` 展示了解锁后的设置界面状态。
+
 ### 6. 批量导入与导出
 
 设置面板顶部有两个按钮：
@@ -108,6 +110,12 @@ Anthropic,sk-ant-xxxx,anthropic.com,"含,逗号的备注"
 VaultBar 把 API Key 存在系统 Keychain 里。启动时需要访问这些 Keychain 条目来读取元数据、恢复已保存的 Key，或者准备 Settings 里的编辑视图。macOS 会在某些情况下要求你输入登录密码或通过系统验证，这是系统在确认“当前应用可以读取这些受保护的数据”，不是 VaultBar 自己保存了额外密码。
 
 如果你刚重启过电脑、刚登录账户，或者 Keychain 还没有解锁，第一次访问时出现密码提示是正常的。
+
+## 换新 Mac / Time Machine 恢复注意事项
+
+VaultBar 默认把 Keychain 条目保存为 `ThisDeviceOnly` 级别，目的是让 API Key 只留在当前 Mac 上。这个级别的 Keychain 项不会通过 Time Machine 或迁移助理迁移到新机器。
+
+如果你在新 Mac 上恢复系统后看到 “Keychain items are missing” 或 “The requested Keychain item was not found”，通常表示元数据文件已经恢复，但真正的 API Key 没有随 Keychain 迁移。请在旧 Mac 上打开 VaultBar，先导出 CSV，再在新 Mac 上导入。导出的 CSV 是明文文件，用完后请妥善删除。
 
 ## 说明
 

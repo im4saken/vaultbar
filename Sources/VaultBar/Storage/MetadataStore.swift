@@ -4,6 +4,7 @@ import Foundation
 enum MetadataStoreError: LocalizedError {
     case invalidEncryptionKey
     case applicationSupportUnavailable
+    case restoredKeychainItemsMissing
 
     var errorDescription: String? {
         switch self {
@@ -11,6 +12,8 @@ enum MetadataStoreError: LocalizedError {
             "The metadata encryption key is invalid."
         case .applicationSupportUnavailable:
             "Application Support is unavailable."
+        case .restoredKeychainItemsMissing:
+            "VaultBar found restored metadata, but the required Keychain items are missing on this Mac. API keys saved with ThisDeviceOnly protection cannot be migrated by Time Machine. Export from the old Mac if available, then import here."
         }
     }
 }
@@ -36,11 +39,17 @@ actor MetadataStore {
 
         do {
             let sealedBox = try AES.GCM.SealedBox(combined: Data(contentsOf: url))
-            let data = try AES.GCM.open(sealedBox, using: try symmetricKey())
+            let data = try AES.GCM.open(sealedBox, using: try symmetricKey(createIfMissing: false))
             return try decoder.decode([KeyMetadata].self, from: data)
         } catch {
             // Decryption failed — fall back to reading metadata from keychain vault-secrets + labels
-            let raw = try keychain.readAllAPIKeys()
+            let raw: [UUID: String]
+            do {
+                raw = try keychain.readAllAPIKeys()
+            } catch KeychainError.itemNotFound {
+                throw MetadataStoreError.restoredKeychainItemsMissing
+            }
+
             var labels: [UUID: String] = [:]
             do {
                 labels = try keychain.loadLabels()
@@ -71,8 +80,8 @@ actor MetadataStore {
         try keychain.saveLabels(labels)
     }
 
-    private func symmetricKey() throws -> SymmetricKey {
-        let data = try keychain.metadataEncryptionKey()
+    private func symmetricKey(createIfMissing: Bool = true) throws -> SymmetricKey {
+        let data = try keychain.metadataEncryptionKey(createIfMissing: createIfMissing)
         guard data.count == 32 else {
             throw MetadataStoreError.invalidEncryptionKey
         }
