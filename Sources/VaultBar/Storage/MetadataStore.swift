@@ -22,9 +22,11 @@ actor MetadataStore {
     private let keychain: KeychainHelper
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private let fileURLOverride: URL?
 
-    init(keychain: KeychainHelper = .shared) {
+    init(keychain: KeychainHelper = .shared, fileURL: URL? = nil) {
         self.keychain = keychain
+        self.fileURLOverride = fileURL
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -42,6 +44,10 @@ actor MetadataStore {
             let data = try AES.GCM.open(sealedBox, using: try symmetricKey(createIfMissing: false))
             return try decoder.decode([KeyMetadata].self, from: data)
         } catch {
+            // Keep a copy of the unreadable file: the recovery below loses website/notes
+            // and the caller may overwrite the original with the recovered data.
+            try backUpUnreadableFile(at: url)
+
             // Decryption failed — fall back to reading metadata from keychain vault-secrets + labels
             let raw: [UUID: String]
             do {
@@ -80,6 +86,13 @@ actor MetadataStore {
         try keychain.saveLabels(labels)
     }
 
+    private func backUpUnreadableFile(at url: URL) throws {
+        let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+        let backupURL = url.deletingLastPathComponent()
+            .appendingPathComponent("\(url.lastPathComponent).bak-\(timestamp)")
+        try FileManager.default.copyItem(at: url, to: backupURL)
+    }
+
     private func symmetricKey(createIfMissing: Bool = true) throws -> SymmetricKey {
         let data = try keychain.metadataEncryptionKey(createIfMissing: createIfMissing)
         guard data.count == 32 else {
@@ -89,6 +102,10 @@ actor MetadataStore {
     }
 
     private func metadataURL() throws -> URL {
+        if let fileURLOverride {
+            return fileURLOverride
+        }
+
         guard let baseURL = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
