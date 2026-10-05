@@ -137,8 +137,7 @@ struct CapsuleSearchView: View {
     private func copyKey(_ metadata: KeyMetadata) {
         do {
             let secret = try repository.readSecret(id: metadata.id)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(secret, forType: .string)
+            KeyRepository.writeSecret(secret)
             repository.scheduleClipboardClear(changeCount: NSPasteboard.general.changeCount)
 
             showCopiedToast = true

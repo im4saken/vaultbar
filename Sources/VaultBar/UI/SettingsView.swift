@@ -279,7 +279,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    ForEach(repository.items.sorted { $0.updatedAt > $1.updatedAt }) { item in
+                    ForEach(KeyRepository.sortedByLabel(repository.items)) { item in
                         keyRow(item)
                     }
 
@@ -460,7 +460,7 @@ struct SettingsView: View {
     }
 
     private func selectInitialKey() {
-        let first = repository.items.sorted { $0.updatedAt > $1.updatedAt }.first
+        let first = KeyRepository.sortedByLabel(repository.items).first
         selectedID = first?.id
         if let first {
             loadDraft(from: first)
@@ -489,7 +489,7 @@ struct SettingsView: View {
         Task {
             if await repository.delete(id: selectedID) {
                 unlockedSecrets[selectedID] = nil
-                self.selectedID = repository.items.sorted { $0.updatedAt > $1.updatedAt }.first?.id
+                self.selectedID = KeyRepository.sortedByLabel(repository.items).first?.id
                 showToast("已删除")
             }
         }

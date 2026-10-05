@@ -283,14 +283,29 @@ final class KeyRepository: ObservableObject {
 
         do {
             let secret = try readSecret(id: metadata.id)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(secret, forType: .string)
+            Self.writeSecret(secret)
             scheduleClipboardClear(changeCount: NSPasteboard.general.changeCount)
             return true
         } catch {
             errorMessage = error.localizedDescription
             NSSound.beep()
             return false
+        }
+    }
+
+    /// Writes a secret and marks it concealed/transient (nspasteboard.org convention)
+    /// so clipboard history managers do not record it.
+    static func writeSecret(_ secret: String, to pasteboard: NSPasteboard = .general) {
+        pasteboard.clearContents()
+        pasteboard.setString(secret, forType: .string)
+        pasteboard.setString("", forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType"))
+        pasteboard.setString("", forType: NSPasteboard.PasteboardType("org.nspasteboard.TransientType"))
+    }
+
+    nonisolated static func sortedByLabel(_ items: [KeyMetadata]) -> [KeyMetadata] {
+        items.sorted {
+            let order = $0.label.localizedStandardCompare($1.label)
+            return order == .orderedSame ? $0.createdAt < $1.createdAt : order == .orderedAscending
         }
     }
 
