@@ -78,4 +78,18 @@ final class CSVCodecTests: XCTestCase {
         let parsed = CSVCodec.parse(serialized)
         XCTAssertEqual(parsed, rows)
     }
+
+    func testParseKeepsTrailingQuotedEmptyField() {
+        XCTAssertEqual(CSVCodec.parse("a,\"\""), [["a", ""]])
+        XCTAssertEqual(CSVCodec.parse("\"\""), [[""]])
+    }
+
+    func testParsePreservesCarriageReturnInsideQuotedField() {
+        XCTAssertEqual(CSVCodec.parse("\"a\rb\",c"), [["a\rb", "c"]])
+        XCTAssertEqual(CSVCodec.parse("\"a\r\nb\",c"), [["a\r\nb", "c"]])
+    }
+
+    func testParseLoneCarriageReturnEndsRow() {
+        XCTAssertEqual(CSVCodec.parse("a,b\rc,d"), [["a", "b"], ["c", "d"]])
+    }
 }

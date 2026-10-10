@@ -87,9 +87,21 @@ actor MetadataStore {
     }
 
     private func backUpUnreadableFile(at url: URL) throws {
+        let directory = url.deletingLastPathComponent()
+        let prefix = "\(url.lastPathComponent).bak-"
+
+        // The unreadable file is left in place, so it is seen again on every launch.
+        // Don't pile up identical backups of the same bytes.
+        let original = try Data(contentsOf: url)
+        let existing = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        for name in existing where name.hasPrefix(prefix) {
+            if let data = try? Data(contentsOf: directory.appendingPathComponent(name)), data == original {
+                return
+            }
+        }
+
         let timestamp = Int(Date().timeIntervalSince1970 * 1000)
-        let backupURL = url.deletingLastPathComponent()
-            .appendingPathComponent("\(url.lastPathComponent).bak-\(timestamp)")
+        let backupURL = directory.appendingPathComponent("\(prefix)\(timestamp)")
         try FileManager.default.copyItem(at: url, to: backupURL)
     }
 

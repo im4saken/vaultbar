@@ -2,25 +2,22 @@ import Foundation
 
 enum CSVCodec {
     static func parse(_ text: String) -> [[String]] {
-        let normalized = text
-            .replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-
         var rows: [[String]] = []
         var field = ""
         var row: [String] = []
         var inQuotes = false
-        var i = normalized.startIndex
+        var fieldWasQuoted = false
+        var i = text.startIndex
 
-        while i < normalized.endIndex {
-            let c = normalized[i]
+        while i < text.endIndex {
+            let c = text[i]
 
             if inQuotes {
                 if c == "\"" {
-                    let next = normalized.index(after: i)
-                    if next < normalized.endIndex, normalized[next] == "\"" {
+                    let next = text.index(after: i)
+                    if next < text.endIndex, text[next] == "\"" {
                         field.append("\"")
-                        i = normalized.index(after: next)
+                        i = text.index(after: next)
                         continue
                     }
                     inQuotes = false
@@ -31,23 +28,27 @@ enum CSVCodec {
                 switch c {
                 case "\"":
                     inQuotes = true
+                    fieldWasQuoted = true
                 case ",":
                     row.append(field)
                     field = ""
-                case "\n":
+                    fieldWasQuoted = false
+                case "\n", "\r", "\r\n":
+                    // "\r\n" is a single Character in Swift.
                     row.append(field)
                     rows.append(row)
                     field = ""
                     row = []
+                    fieldWasQuoted = false
                 default:
                     field.append(c)
                 }
             }
 
-            i = normalized.index(after: i)
+            i = text.index(after: i)
         }
 
-        if !field.isEmpty || !row.isEmpty {
+        if !field.isEmpty || !row.isEmpty || fieldWasQuoted {
             row.append(field)
             rows.append(row)
         }

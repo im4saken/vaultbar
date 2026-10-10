@@ -32,6 +32,25 @@ final class MetadataStoreErrorTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fileURL), original, "original file must be left in place")
     }
 
+    func testRepeatedLoadsDoNotCreateDuplicateBackups() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("VaultBarTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let fileURL = directory.appendingPathComponent("metadata.json.enc")
+        try Data("not a valid sealed box".utf8).write(to: fileURL)
+
+        let store = MetadataStore(fileURL: fileURL)
+        _ = try? await store.load()
+        _ = try? await store.load()
+        _ = try? await MetadataStore(fileURL: fileURL).load()
+
+        let backups = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+            .filter { $0.hasPrefix("metadata.json.enc.bak-") }
+        XCTAssertEqual(backups.count, 1)
+    }
+
     func testLoadDoesNotCreateBackupWhenFileIsMissing() async throws {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("VaultBarTests-\(UUID().uuidString)", isDirectory: true)
