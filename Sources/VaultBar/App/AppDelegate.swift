@@ -30,6 +30,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .vaultBarOpenSettings,
             object: nil
         )
+        hideStraySwiftUISettingsWindows()
+        for delay in [0.1, 0.5] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.hideStraySwiftUISettingsWindows()
+            }
+        }
+    }
+
+    /// The `Settings { EmptyView() }` scene in `VaultBarApp` is only a placeholder that keeps
+    /// SwiftUI's default menu (Cmd+C/V). It can pop up an empty "VaultBar 设置" window at launch,
+    /// so hide any visible window that isn't one of our own panels.
+    private func hideStraySwiftUISettingsWindows() {
+        let ours: [NSWindow?] = [capsuleWindow, addKeyWindow, settingsWindow, aboutPanel]
+        for window in NSApp.windows where window.isVisible && !ours.contains(where: { $0 === window }) {
+            let identifier = window.identifier?.rawValue ?? ""
+            if identifier.contains("Settings") {
+                window.orderOut(nil)
+            }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
