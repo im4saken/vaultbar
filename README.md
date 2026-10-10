@@ -8,7 +8,7 @@ VaultBar 是一个 macOS 菜单栏 API Key 管理器。它支持搜索、复制�
 
 如果你只想直接使用，不需要自己编译，可以到 GitHub Releases 下载预编译版本：
 
-[VaultBar v0.3.2](https://github.com/im4saken/vaultbar/releases/tag/v0.3.2)
+[VaultBar v0.3.3](https://github.com/im4saken/vaultbar/releases/tag/v0.3.3)
 
 ## 功能
 
