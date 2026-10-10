@@ -209,10 +209,8 @@ final class KeyRepository: ObservableObject {
     private func authenticateForSettingsUnlock(context: LAContext) async throws {
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            if let error {
-                throw error
-            }
-            return
+            // Fail closed: never unlock secrets if authentication cannot be evaluated.
+            throw error ?? LAError(.authenticationFailed)
         }
 
         try await withCheckedThrowingContinuation { continuation in

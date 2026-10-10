@@ -82,7 +82,7 @@ actor MetadataStore {
         try encryptedData.write(to: url, options: [.atomic, .completeFileProtection])
 
         // Also persist labels to keychain for recovery if metadata file is lost
-        let labels = Dictionary(uniqueKeysWithValues: metadata.map { ($0.id, $0.label) })
+        let labels = Dictionary(metadata.map { ($0.id, $0.label) }, uniquingKeysWith: { _, latest in latest })
         try keychain.saveLabels(labels)
     }
 
