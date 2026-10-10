@@ -230,13 +230,20 @@ final class KeyRepository: ObservableObject {
             errorMessage = "Label is required."
             return false
         }
+        guard !secret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "API key is required."
+            return false
+        }
+
+        guard let index = items.firstIndex(where: { $0.id == id }) else {
+            errorMessage = "Key not found."
+            return false
+        }
+
+        // Remember the current secret so it can be restored if a later step fails.
+        let previousSecret = try? readSecret(id: id)
 
         do {
-            guard let index = items.firstIndex(where: { $0.id == id }) else {
-                errorMessage = "Key not found."
-                return false
-            }
-
             try upsertVaultSecret(secret, id: id)
             var updatedItems = items
             updatedItems[index].label = label
@@ -249,6 +256,9 @@ final class KeyRepository: ObservableObject {
             selectedID = id
             return true
         } catch {
+            if let previousSecret {
+                try? upsertVaultSecret(previousSecret, id: id)
+            }
             errorMessage = error.localizedDescription
             return false
         }
@@ -256,12 +266,22 @@ final class KeyRepository: ObservableObject {
 
     func delete(id: UUID) async -> Bool {
         do {
-            try keychain.deleteAPIKey(id: id)
-            var vaultSecrets = try unlockedVaultSecrets()
-            vaultSecrets[id] = nil
-            try keychain.saveAllAPIKeys(vaultSecrets)
+            // Snapshot first so every later step can be undone.
+            let originalSecrets = try unlockedVaultSecrets()
+            var remainingSecrets = originalSecrets
+            remainingSecrets[id] = nil
+            try keychain.saveAllAPIKeys(remainingSecrets)
+
             let updatedItems = items.filter { $0.id != id }
-            try await metadataStore.save(updatedItems)
+            do {
+                try await metadataStore.save(updatedItems)
+            } catch {
+                try? keychain.saveAllAPIKeys(originalSecrets)
+                throw error
+            }
+
+            // Metadata and vault are consistent now; remove the legacy per-key entry last.
+            try? keychain.deleteAPIKey(id: id)
             items = updatedItems
             if selectedID == id {
                 selectedID = searchResults.first?.id
