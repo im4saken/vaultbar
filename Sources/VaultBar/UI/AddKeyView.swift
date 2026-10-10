@@ -7,6 +7,7 @@ struct AddKeyView: View {
     @State private var draft = NewAPIKey(label: "", secret: "", website: "", notes: "")
     @FocusState private var focusedField: Field?
     @State private var showSavedToast = false
+    @State private var isSecretRevealed = false
 
     private enum Field {
         case label
@@ -50,10 +51,20 @@ struct AddKeyView: View {
                     Divider().opacity(0.5)
 
                     formRow(title: "API/Token") {
-                        SecureField("API/Token", text: $draft.secret)
+                        HStack(spacing: 8) {
+                            Group {
+                                if isSecretRevealed {
+                                    TextField("API/Token", text: $draft.secret)
+                                } else {
+                                    SecureField("API/Token", text: $draft.secret)
+                                }
+                            }
                             .multilineTextAlignment(.trailing)
                             .textFieldStyle(.plain)
                             .focused($focusedField, equals: .secret)
+
+                            SecretVisibilityToggle(isRevealed: $isSecretRevealed)
+                        }
                     }
 
                     Divider().opacity(0.5)
@@ -114,6 +125,15 @@ struct AddKeyView: View {
         .onAppear {
             focusedField = .label
         }
+        .onChange(of: isSecretRevealed) { _, _ in
+            // Swapping SecureField <-> TextField drops focus; put the cursor back.
+            if focusedField == .secret || focusedField == nil {
+                DispatchQueue.main.async { focusedField = .secret }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { _ in
+            isSecretRevealed = false
+        }
         .onSubmit {
             if draft.isValid {
                 save()
@@ -171,6 +191,7 @@ struct AddKeyView: View {
     }
 
     private func close() {
+        isSecretRevealed = false
         if let onClose {
             onClose()
         } else {
