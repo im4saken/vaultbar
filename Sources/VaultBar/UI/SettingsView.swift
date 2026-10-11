@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var selectedID: UUID?
     @State private var draftLabel = ""
     @State private var draftSecret = ""
+    @State private var isSecretRevealed = false
     @State private var draftWebsite = ""
     @State private var draftNotes = ""
     @State private var showingDeleteConfirmation = false
@@ -98,6 +99,9 @@ struct SettingsView: View {
         }
         .onAppear {
             selectInitialKey()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .vaultBarSettingsHidden)) { _ in
+            isSecretRevealed = false
         }
         .onChange(of: repository.items) { _, _ in
             guard selectedID == nil || repository.items.contains(where: { $0.id == selectedID }) else {
@@ -335,8 +339,18 @@ struct SettingsView: View {
                         Divider().opacity(0.5)
 
                         formRow(title: "API/Token") {
-                            SecureField("API/Token", text: $draftSecret)
+                            HStack(spacing: 8) {
+                                Group {
+                                    if isSecretRevealed {
+                                        TextField("API/Token", text: $draftSecret)
+                                    } else {
+                                        SecureField("API/Token", text: $draftSecret)
+                                    }
+                                }
                                 .textFieldStyle(.plain)
+
+                                SecretVisibilityToggle(isRevealed: $isSecretRevealed)
+                            }
                         }
 
                         Divider().opacity(0.5)
@@ -468,6 +482,8 @@ struct SettingsView: View {
     }
 
     private func loadDraft(from metadata: KeyMetadata) {
+        // Always re-hide the secret when a different key is shown or the draft is reloaded.
+        isSecretRevealed = false
         draftLabel = metadata.label
         draftSecret = unlockedSecrets[metadata.id] ?? ""
         draftWebsite = metadata.website
@@ -504,6 +520,7 @@ struct SettingsView: View {
     }
 
     private func lockAllSecrets() {
+        isSecretRevealed = false
         unlockedSecrets = [:]
         if let selectedMetadata {
             loadDraft(from: selectedMetadata)

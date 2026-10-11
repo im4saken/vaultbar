@@ -33,6 +33,13 @@ final class SettingsPanel: NSPanel {
         orderOut(nil)
     }
 
+    /// Every way of hiding this window (close button, Done button, Cmd+W) ends up here,
+    /// so views can re-mask any revealed API key.
+    override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
+        NotificationCenter.default.post(name: .vaultBarSettingsHidden, object: nil)
+    }
+
     func centerOnActiveScreen() {
         let screen = NSScreen.main ?? NSScreen.screens.first
         guard let visibleFrame = screen?.visibleFrame else { return }
